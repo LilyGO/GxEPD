@@ -46,7 +46,7 @@ const uint8_t GxGDE0213B1::Gatetime[] = {0x3b, 0x08};  // 2us per line
 
 GxGDE0213B1::GxGDE0213B1(GxIO& io, int8_t rst, int8_t busy) :
   GxEPD(GxGDE0213B1_VISIBLE_WIDTH, GxGDE0213B1_HEIGHT), IO(io),
-  _current_page(-1), _using_partial_mode(false), _diag_enabled(false),
+  _current_page(-1), _using_partial_mode(false),
   _rst(rst), _busy(busy)
 {
 }
@@ -91,13 +91,8 @@ void GxGDE0213B1::drawPixel(int16_t x, int16_t y, uint16_t color)
     _buffer[i] = (_buffer[i] & (0xFF ^ (1 << (7 - x % 8))));
 }
 
-void GxGDE0213B1::init(uint32_t serial_diag_bitrate)
+void GxGDE0213B1::init(void)
 {
-  if (serial_diag_bitrate > 0)
-  {
-    Serial.begin(serial_diag_bitrate);
-    _diag_enabled = true;
-  }
   IO.init();
   IO.setFrequency(4000000); // 4MHz
   if (_rst >= 0)
@@ -420,20 +415,17 @@ void GxGDE0213B1::_waitWhileBusy(const char* comment)
     delay(1);
     if (micros() - start > 10000000)
     {
-      if (_diag_enabled) Serial.println("Busy Timeout!");
+      Serial.println("Busy Timeout!");
       break;
     }
   }
   if (comment)
   {
 #if !defined(DISABLE_DIAGNOSTIC_OUTPUT)
-    if (_diag_enabled)
-    {
-      unsigned long elapsed = micros() - start;
-      Serial.print(comment);
-      Serial.print(" : ");
-      Serial.println(elapsed);
-    }
+    unsigned long elapsed = micros() - start;
+    Serial.print(comment);
+    Serial.print(" : ");
+    Serial.println(elapsed);
 #endif
   }
   (void) start;
