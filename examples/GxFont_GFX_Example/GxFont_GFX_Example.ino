@@ -1,32 +1,30 @@
-// GxFont_GFX_Example : example to show the use of additional fonts rendering these fonts
-//
-// Author : J-M Zingg
-//
-// Version : see library.properties
-//
-// License: GNU GENERAL PUBLIC LICENSE V3, see LICENSE
-//
-// Library: https://github.com/ZinggJM/GxEPD
+/************************************************************************************
+   GxEPD_SPI_TestExample : test example for e-Paper displays from Dalian Good Display Co., Ltd.: www.good-display.com
 
-// for use of additional fonts you need to enable these in file GxFont_GFX.h
-// and install the library
-//
-// selection of the additional fonts is done by the following methods:
-//
-// void setFont(const uint8_t *font); // selects rendering and fonts from library U8G2_FOR_ADAFRUIT_GFX
-//
-// void setFreeFont(const GFXfont *f = NULL); // selects rendering and fonts from library GxFont_GFX_TFT_eSPI
-// void void setTextFont(uint8_t font); // selects rendering and fonts from library GxFont_GFX_TFT_eSPI
-//
-// void setFont(uint8_t f); // selects rendering and fonts from library Adafruit_tfGFX
-// (no additional fonts, as all are now part of Adafruit_GFX, but fonts above 7bit character set)
-//
-// void setFont(const GFXfont *f = NULL); // reverts back to Adafruit_GFX FreeFonts
-// use setFont((void*)NULL); // to select Adafruit_GFX classic font
-//
-// these additions may not work with AVR Arduinos
-//
-// these additions are only partially tested; more tests and additions may follow
+   based on Demo Example from Good Display, now available on http://www.good-display.com/download_list/downloadcategoryid=34&isMode=false.html
+
+   Author : J-M Zingg
+
+   Version : 2.0
+
+   Support: limited, provided as example, no claim to be fit for serious use
+
+   connection to the e-Paper display is through DESTM32-S2 connection board, available from Good Display
+
+   DESTM32-S2 pinout (top, component side view):
+         |-------------------------------------------------
+         |  VCC  |o o| VCC 5V  not needed
+         |  GND  |o o| GND
+         |  3.3  |o o| 3.3     3.3V
+         |  nc   |o o| nc
+         |  nc   |o o| nc
+         |  nc   |o o| nc
+   MOSI  |  DIN  |o o| CLK     SCK
+   SS    |  CS   |o o| DC      e.g. D3
+   D4    |  RST  |o o| BUSY    e.g. D2
+         |  nc   |o o| BS      GND
+         |-------------------------------------------------
+*/
 
 // Supporting Arduino Forum Topics:
 // Waveshare e-paper displays with SPI: http://forum.arduino.cc/index.php?topic=487007.0
@@ -65,16 +63,13 @@
 //#include <GxGDEW075T8/GxGDEW075T8.cpp>      // 7.5" b/w
 //#include <GxGDEW075Z09/GxGDEW075Z09.cpp>    // 7.5" b/w/r
 
-#if !defined(_GxFont_GFX_TFT_eSPI_H_)
+#include GxEPD_BitmapExamples
+
 // FreeFonts from Adafruit_GFX
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
-//#include <Fonts/FreeMonoBold18pt7b.h>
-//#include <Fonts/FreeMonoBold24pt7b.h>
-#endif
-#if defined(_ADAFRUIT_TF_GFX_H_)
-#include <Fonts/Open_Sans_Bold_12pt.h>
-#endif
+#include <Fonts/FreeMonoBold18pt7b.h>
+#include <Fonts/FreeMonoBold24pt7b.h>
 
 
 #include <GxIO/GxIO_SPI/GxIO_SPI.cpp>
@@ -83,13 +78,20 @@
 #if defined(ESP8266)
 
 // generic/common.h
-//static const uint8_t SS    = 15; // D8
-//static const uint8_t MOSI  = 13; // D7
-//static const uint8_t MISO  = 12; // D6
-//static const uint8_t SCK   = 14; // D5
+//static const uint8_t SS    = 15;
+//static const uint8_t MOSI  = 13;
+//static const uint8_t MISO  = 12;
+//static const uint8_t SCK   = 14;
+// pins_arduino.h
+//static const uint8_t D8   = 15;
+//static const uint8_t D7   = 13;
+//static const uint8_t D6   = 12;
+//static const uint8_t D5   = 14;
 
-GxIO_Class io(SPI, /*CS=D8*/ SS, /*DC=D3*/ 0, /*RST=D4*/ 2); // arbitrary selection of D3(=0), D4(=2), selected for default of GxEPD_Class
-GxEPD_Class display(io /*RST=D4*/ /*BUSY=D2*/); // default selection of D4(=2), D2(=4)
+// GxIO_SPI(SPIClass& spi, int8_t cs, int8_t dc, int8_t rst = -1, int8_t bl = -1);
+GxIO_Class io(SPI, SS, 0, 2); // arbitrary selection of D3(=0), D4(=2), selected for default of GxEPD_Class
+// GxGDEP015OC1(GxIO& io, uint8_t rst = 2, uint8_t busy = 4);
+GxEPD_Class display(io); // default selection of D4(=2), D2(=4)
 
 #elif defined(ESP32)
 
@@ -99,8 +101,10 @@ GxEPD_Class display(io /*RST=D4*/ /*BUSY=D2*/); // default selection of D4(=2), 
 //static const uint8_t MISO  = 19;
 //static const uint8_t SCK   = 18;
 
-GxIO_Class io(SPI, /*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16); // arbitrary selection of 17, 16
-GxEPD_Class display(io, /*RST=*/ 16, /*BUSY=*/ 4); // arbitrary selection of (16), 4
+// GxIO_SPI(SPIClass& spi, int8_t cs, int8_t dc, int8_t rst = -1, int8_t bl = -1);
+GxIO_Class io(SPI, 5, 19, 12); // arbitrary selection of 17, 16
+// GxGDEP015OC1(GxIO& io, uint8_t rst = D4, uint8_t busy = D2);
+GxEPD_Class display(io, 12, 4); // arbitrary selection of (16), 4
 
 #elif defined(ARDUINO_ARCH_SAMD)
 
@@ -115,12 +119,13 @@ GxEPD_Class display(io, /*RST=*/ 16, /*BUSY=*/ 4); // arbitrary selection of (16
 //#define PIN_SPI_SCK   (9u)
 //#define PIN_SPI_SS    (4u)
 
-GxIO_Class io(SPI, /*CS=*/ 4, /*DC=*/ 7, /*RST=*/ 6);
-GxEPD_Class display(io, /*RST=*/ 6, /*BUSY=*/ 5);
+GxIO_Class io(SPI, 4, 7, 6);
+GxEPD_Class display(io, 6, 5);
 
-#elif defined(ARDUINO_GENERIC_STM32F103C) && defined(MCU_STM32F103C8)
+#elif defined(_BOARD_GENERIC_STM32F103C_H_)
 
-// STM32 Boards(STM32duino.com) Generic STM32F103C series STM32F103C8
+// STM32 Boards (STM32duino.com)
+// Generic STM32F103C series
 // aka BluePill
 // board.h
 //#define BOARD_SPI1_NSS_PIN        PA4
@@ -139,26 +144,21 @@ GxEPD_Class display(io, /*RST=*/ 6, /*BUSY=*/ 5);
 //static const uint8_t MISO = BOARD_SPI1_MISO_PIN;
 //static const uint8_t SCK  = BOARD_SPI1_SCK_PIN;
 
+// original mapping suggestion for STM32F1, e.g. STM32F103C8T6 "BluePill"
+// BUSY -> A3, RST -> A9, DC -> A8, CS-> A4, CLK -> A5, DIN -> A7
+
+// GxIO_SPI(SPIClass& spi, int8_t cs, int8_t dc, int8_t rst = -1, int8_t bl = -1);
+//GxIO_Class io(SPI, SS, 8, 9);
+// GxGDEP015OC1(GxIO& io, uint8_t rst = 9, uint8_t busy = 7);
+//GxEPD_Class display(io, 9, 3);
+
 // new mapping suggestion for STM32F1, e.g. STM32F103C8T6 "BluePill"
 // BUSY -> A1, RST -> A2, DC -> A3, CS-> A4, CLK -> A5, DIN -> A7
 
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 3, /*RST=*/ 2);
-GxEPD_Class display(io, /*RST=*/ 2, /*BUSY=*/ 1);
-
-#elif defined(ARDUINO_GENERIC_STM32F103V) && defined(MCU_STM32F103VB)
-
-// board.h
-//#define BOARD_SPI1_NSS_PIN        PA4
-//#define BOARD_SPI1_MOSI_PIN       PA7
-//#define BOARD_SPI1_MISO_PIN       PA6
-//#define BOARD_SPI1_SCK_PIN        PA5
-
-// STM32 Boards(STM32duino.com) Generic STM32F103V series STM32F103VB
-// Good Display DESPI-M01
-// note: needs jumper wires from SS=PA4->CS, SCK=PA5->SCK, MOSI=PA7->SDI
-
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ PE15, /*RST=*/ PE14); // DC, RST as wired by DESPI-M01
-GxEPD_Class display(io, /*RST=*/ PE14, /*BUSY=*/ PE13); // RST, BUSY as wired by DESPI-M01
+// GxIO_SPI(SPIClass& spi, int8_t cs, int8_t dc, int8_t rst = -1, int8_t bl = -1);
+GxIO_Class io(SPI, SS, 3, 2);
+// GxGDEP015OC1(GxIO& io, uint8_t rst = 9, uint8_t busy = 7);
+GxEPD_Class display(io, 2, 1);
 
 #else
 
@@ -168,64 +168,246 @@ GxEPD_Class display(io, /*RST=*/ PE14, /*BUSY=*/ PE13); // RST, BUSY as wired by
 //#define PIN_SPI_MISO  (12)
 //#define PIN_SPI_SCK   (13)
 
-GxIO_Class io(SPI, /*CS=*/ SS, /*DC=*/ 8, /*RST=*/ 9); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
-GxEPD_Class display(io /*RST=9*/ /*BUSY=7*/); // default selection of (9), 7
+GxIO_Class io(SPI, SS, 8, 9); // arbitrary selection of 8, 9 selected for default of GxEPD_Class
+GxEPD_Class display(io);
 
 #endif
 
-#if defined(_GxGDEW0154Z04_H_) || defined(_GxGDEW0213Z16_H_) || defined(_GxGDEW029Z10_H_) || defined(_GxGDEW027C44_H_) || defined(_GxGDEW042Z15_H_) || defined(_GxGDEW075Z09_H_)
-#define HAS_RED_COLOR
-#endif
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println();
   Serial.println("setup");
-
-  display.init(115200); // enable diagnostic output on Serial
+  SPI.begin(18,-1,23,-1);
+  display.init();
 
   Serial.println("setup done");
 }
 
 void loop()
 {
-#if !defined(_ADAFRUIT_TF_GFX_H_) && !defined(_GxFont_GFX_TFT_eSPI_H_) && !defined(U8g2_for_Adafruit_GFX_h)
+  showBitmapExample();
+  delay(2000);
+#if !defined(__AVR)
+  drawCornerTest();
+  showFont("FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
   showFont("FreeMonoBold12pt7b", &FreeMonoBold12pt7b);
-#endif
-#if defined(U8g2_for_Adafruit_GFX_h)
-  showFont("u8g2_font_helvR14_tf", u8g2_font_helvR14_tf); // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  //showFont("FreeMonoBold18pt7b", &FreeMonoBold18pt7b);
+  //showFont("FreeMonoBold24pt7b", &FreeMonoBold24pt7b);
+#else
+  display.drawCornerTest();
   delay(2000);
-  showFont("u8g2_font_profont22_mr", u8g2_font_profont22_mr); // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
-  delay(2000);
-#endif
-#if defined(_GxFont_GFX_TFT_eSPI_H_)
-  showFreeFont("FreeMonoBold12pt7b", &FreeMonoBold12pt7b);
-  delay(2000);
-  //showFreeFont("NULL", NULL);
-  showTextFont("Font 1", 1, 1);
-  delay(2000);
-  showTextFont("Font 1", 1, 2);
-  delay(2000);
-  showTextFont("Font 1", 1, 3);
-  delay(2000);
-  showTextFont("Font 2", 2, 1);
-  delay(2000);
-  showTextFont("Font 2", 2, 2);
-  delay(2000);
-  showTextFont("Font 2", 2, 3);
-  delay(2000);
-  showTextFont("Font 4", 4, 1);
-  delay(2000);
-  showTextFont("Font 4", 4, 2);
-  delay(2000);
-  showTextFont("Font 4", 4, 3);
-#endif
-#if defined(_ADAFRUIT_TF_GFX_H_)
-  showFont("Open_Sans_Bold_12pt", OPENSANSBOLD_12);
+  display.drawPaged(showFontCallback);
 #endif
   delay(10000);
 }
+
+#if defined(_GxGDEP015OC1_H_)
+void showBitmapExample()
+{
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2));
+  delay(5000);
+  display.fillScreen(GxEPD_WHITE);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+  delay(5000);
+  showBoat();
+}
+#endif
+
+#if defined(_GxGDEW0154Z04_H_)
+#define HAS_RED_COLOR
+void showBitmapExample()
+{
+#if !defined(__AVR)
+  display.drawPicture(BitmapWaveshare_black, BitmapWaveshare_red, sizeof(BitmapWaveshare_black), sizeof(BitmapWaveshare_red), GxEPD::bm_normal);
+  delay(5000);
+#endif
+  display.drawExamplePicture(BitmapExample1, BitmapExample2, sizeof(BitmapExample1), sizeof(BitmapExample2));
+  delay(5000);
+}
+#endif
+
+#if defined(_GxGDE0213B1_H_)
+void showBitmapExample()
+{
+  display.drawBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawBitmap(BitmapExample2, sizeof(BitmapExample2));
+  delay(5000);
+#if !defined(__AVR)
+  display.drawBitmap(first, sizeof(first));
+  delay(5000);
+  display.drawBitmap(second, sizeof(second));
+  delay(5000);
+  display.drawBitmap(third, sizeof(third));
+  delay(5000);
+#endif
+  display.fillScreen(GxEPD_WHITE);
+  display.drawBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+  delay(5000);
+  showBoat();
+}
+#endif
+
+#if defined(_GxGDEW0213Z16_H_)
+#define HAS_RED_COLOR
+void showBitmapExample()
+{
+  display.drawPicture(BitmapWaveshare_black, BitmapWaveshare_red, sizeof(BitmapWaveshare_black), sizeof(BitmapWaveshare_red));
+  delay(5000);
+  display.drawExamplePicture(BitmapExample1, BitmapExample2, sizeof(BitmapExample1), sizeof(BitmapExample2));
+  delay(5000);
+#if !defined(__AVR)
+  display.drawExamplePicture(BitmapExample3, BitmapExample4, sizeof(BitmapExample3), sizeof(BitmapExample4));
+  delay(5000);
+#endif
+  display.drawExampleBitmap(BitmapWaveshare_black, sizeof(BitmapWaveshare_black));
+  delay(2000);
+  // example bitmaps for b/w/r are normal on b/w, but inverted on red
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2), GxEPD::bm_invert);
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+}
+#endif
+
+#if defined(_GxGDEH029A1_H_)
+void showBitmapExample()
+{
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2));
+  delay(5000);
+  display.fillScreen(GxEPD_WHITE);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+  delay(5000);
+  showBoat();
+}
+#endif
+
+#if defined(_GxGDEW029Z10_H_)
+#define HAS_RED_COLOR
+void showBitmapExample()
+{
+#if defined(__AVR)
+  display.drawExamplePicture(BitmapExample1, BitmapExample2, sizeof(BitmapExample1), sizeof(BitmapExample2));
+  delay(5000);
+#else
+  display.drawPicture(BitmapWaveshare_black, BitmapWaveshare_red, sizeof(BitmapWaveshare_black), sizeof(BitmapWaveshare_red));
+  delay(5000);
+  display.drawExamplePicture(BitmapExample1, BitmapExample2, sizeof(BitmapExample1), sizeof(BitmapExample2));
+  delay(5000);
+  display.drawExamplePicture(BitmapExample3, BitmapExample4, sizeof(BitmapExample3), sizeof(BitmapExample4));
+  delay(5000);
+  display.drawExampleBitmap(BitmapWaveshare_black, sizeof(BitmapWaveshare_black));
+  delay(2000);
+  // example bitmaps for b/w/r are normal on b/w, but inverted on red
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2), GxEPD::bm_invert);
+  delay(2000);
+#endif
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+}
+#endif
+
+#if defined(_GxGDEW027C44_H_)
+#define HAS_RED_COLOR
+void showBitmapExample()
+{
+  // draw black and red bitmap
+  display.drawPicture(BitmapExample1, BitmapExample2, sizeof(BitmapExample1), sizeof(BitmapExample2));
+  delay(5000);
+  return;
+  display.drawBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.fillScreen(GxEPD_WHITE);
+  display.drawBitmap(0, 0, BitmapExample1, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+}
+#endif
+
+#if defined(_GxGDEW027W3_H_)
+void showBitmapExample()
+{
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+#if !defined(__AVR)
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2));
+#endif
+  delay(2000);
+  display.drawExampleBitmap(BitmapWaveshare, sizeof(BitmapWaveshare));
+  delay(5000);
+  display.fillScreen(GxEPD_WHITE);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+}
+#endif
+
+#if defined(_GxGDEW042T2_H_) || defined(_GxGDEW042T2_FPU_H_)
+void showBitmapExample()
+{
+#if defined(__AVR)
+  display.drawBitmap(BitmapExample1, sizeof(BitmapExample1));
+#else
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2));
+  delay(5000);
+  display.fillScreen(GxEPD_WHITE);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+#endif
+}
+#endif
+
+#if defined(_GxGDEW042Z15_H_)
+#define HAS_RED_COLOR
+void showBitmapExample()
+{
+#if defined(__AVR)
+  display.drawBitmap(BitmapExample1, sizeof(BitmapExample1));
+#else
+  // draw black and red bitmap
+  display.drawPicture(BitmapExample1, BitmapExample2, sizeof(BitmapExample1), sizeof(BitmapExample2));
+  delay(5000);
+  display.drawPicture(BitmapExample3, BitmapExample4, sizeof(BitmapExample3), sizeof(BitmapExample4));
+  delay(5000);
+  display.drawPicture(BitmapWaveshare_black, BitmapWaveshare_red, sizeof(BitmapWaveshare_black), sizeof(BitmapWaveshare_red));
+  delay(5000);
+  display.drawBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+#endif
+}
+#endif
+
+#if defined(_GxGDEW075T8_H_) || defined(_GxGDEW075Z09_H_)
+void showBitmapExample()
+{
+#if defined(__AVR)
+  //display.drawBitmap(BitmapExample1, sizeof(BitmapExample1));
+#else
+  display.drawExampleBitmap(BitmapExample1, sizeof(BitmapExample1));
+  delay(2000);
+  display.drawExampleBitmap(BitmapExample2, sizeof(BitmapExample2));
+  delay(5000);
+  display.fillScreen(GxEPD_WHITE);
+  display.drawExampleBitmap(BitmapExample1, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_BLACK);
+  display.update();
+#endif
+}
+#endif
 
 void showFont(const char name[], const GFXfont* f)
 {
@@ -248,37 +430,10 @@ void showFont(const char name[], const GFXfont* f)
   delay(5000);
 }
 
-#if defined(U8g2_for_Adafruit_GFX_h)
-void showFont(const char name[], const uint8_t *f)
+void showFontCallback()
 {
-  display.setRotation(0);
-  display.fillScreen(GxEPD_WHITE);
-  display.setFontMode(1);                   // use u8g2 transparent mode (this is default)
-  display.setFontDirection(0);              // left to right (this is default)
-  display.setForegroundColor(GxEPD_BLACK);  // apply Adafruit GFX color
-  display.setBackgroundColor(GxEPD_WHITE);  // apply Adafruit GFX color
-  display.setFont(f); // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
-  display.setCursor(0, 0);
-  display.println();
-  display.println(name);
-  display.println(" !\"#$%&'()*+,-./");
-  display.println("0123456789:;<=>?");
-  display.println("@ABCDEFGHIJKLMNO");
-  display.println("PQRSTUVWXYZ[\\]^_");
-#if defined(HAS_RED_COLOR)
-  display.setForegroundColor(GxEPD_RED);
-#endif
-  display.println("`abcdefghijklmno");
-  display.println("pqrstuvwxyz{|}~ ");
-  display.println("Umlaut ÄÖÜäéöü");
-  display.update();
-}
-#endif
-
-#if defined(_ADAFRUIT_TF_GFX_H_)
-void showFont(const char name[], uint8_t f)
-{
-  display.setRotation(0);
+  const char* name = "FreeMonoBold9pt7b";
+  const GFXfont* f = &FreeMonoBold9pt7b;
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
   display.setFont(f);
@@ -294,53 +449,56 @@ void showFont(const char name[], uint8_t f)
 #endif
   display.println("`abcdefghijklmno");
   display.println("pqrstuvwxyz{|}~ ");
-  display.update();
 }
-#endif
 
-#if defined(_GxFont_GFX_TFT_eSPI_H_)
-void showFreeFont(const char name[], const GFXfont* f)
+void drawCornerTest()
 {
-  display.setRotation(0);
-  display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  display.setFreeFont(f);
-  display.setCursor(0, 0);
-  display.println();
-  display.println(name);
-  display.println(" !\"#$%&'()*+,-./");
-  display.println("0123456789:;<=>?");
-  display.println("@ABCDEFGHIJKLMNO");
-  display.println("PQRSTUVWXYZ[\\]^_");
-#if defined(HAS_RED_COLOR)
-  display.setTextColor(GxEPD_RED);
-#endif
-  display.println("`abcdefghijklmno");
-  display.println("pqrstuvwxyz{|}~ ");
-  display.update();
+  display.drawCornerTest();
+  delay(5000);
+  uint8_t rotation = display.getRotation();
+  for (uint16_t r = 0; r < 4; r++)
+  {
+    display.setRotation(r);
+    display.fillScreen(GxEPD_WHITE);
+    display.fillRect(0, 0, 8, 8, GxEPD_BLACK);
+    display.fillRect(display.width() - 18, 0, 16, 16, GxEPD_BLACK);
+    display.fillRect(display.width() - 25, display.height() - 25, 24, 24, GxEPD_BLACK);
+    display.fillRect(0, display.height() - 33, 32, 32, GxEPD_BLACK);
+    display.update();
+    delay(5000);
+  }
+  display.setRotation(rotation); // restore
 }
-void showTextFont(const char name[], uint8_t f, uint8_t size)
+
+#if defined(_GxGDEP015OC1_H_) || defined(_GxGDE0213B1_H_) || defined(_GxGDEH029A1_H_)
+#include "IMG_0001.h"
+void showBoat()
 {
-  display.setRotation(0);
+  // thanks to bytecrusher: http://forum.arduino.cc/index.php?topic=487007.msg3367378#msg3367378
+  uint16_t x = (display.width() - 64) / 2;
+  uint16_t y = 5;
   display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK, GxEPD_WHITE);
-  display.setTextFont(f);
-  display.setTextSize(size);
-  display.setCursor(0, 0);
-  display.println();
-  display.println(name);
-  display.println(" !\"#$%&'()*+,-./");
-  display.println("0123456789:;<=>?");
-  display.println("@ABCDEFGHIJKLMNO");
-  display.println("PQRSTUVWXYZ[\\]^_");
-#if defined(HAS_RED_COLOR)
-  display.setTextColor(GxEPD_RED);
-#endif
-  display.println("`abcdefghijklmno");
-  display.println("pqrstuvwxyz{|}~ ");
+  display.drawExampleBitmap(gImage_IMG_0001, x, y, 64, 180, GxEPD_BLACK);
   display.update();
+  delay(500);
+  uint16_t forward = GxEPD::bm_invert | GxEPD::bm_flip_x;
+  uint16_t reverse = GxEPD::bm_invert | GxEPD::bm_flip_x | GxEPD::bm_flip_y;
+  for (; y + 180 + 5 <= display.height(); y += 5)
+  {
+    display.fillScreen(GxEPD_WHITE);
+    display.drawExampleBitmap(gImage_IMG_0001, x, y, 64, 180, GxEPD_BLACK, forward);
+    display.updateWindow(0, 0, display.width(), display.height());
+    delay(500);
+  }
+  delay(1000);
+  for (; y >= 5; y -= 5)
+  {
+    display.fillScreen(GxEPD_WHITE);
+    display.drawExampleBitmap(gImage_IMG_0001, x, y, 64, 180, GxEPD_BLACK, reverse);
+    display.updateWindow(0, 0, display.width(), display.height());
+    delay(1000);
+  }
+  display.update();
+  delay(1000);
 }
 #endif
-
-
-
